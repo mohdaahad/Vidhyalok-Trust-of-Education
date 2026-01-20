@@ -22,7 +22,7 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setIsSubmitting(true);
       await contactService.createContactSubmission(formData);
@@ -156,9 +156,9 @@ const Contact = () => {
                   <div>
                     <div className="font-medium text-foreground mb-1">Visit Us</div>
                     <div className="text-sm text-muted-foreground">
-                      123 Hope Street<br />
-                      Charity City, CC 12345<br />
-                      United States
+                      Village Bambyala Post Islamnagar,<br />
+                      Nakur, Saharanpur,<br />
+                      Uttar Pradesh - 247451
                     </div>
                   </div>
                 </div>
@@ -170,8 +170,7 @@ const Contact = () => {
                   <div>
                     <div className="font-medium text-foreground mb-1">Call Us</div>
                     <div className="text-sm text-muted-foreground">
-                      Main: +1 (555) 123-4567<br />
-                      Toll Free: 1-800-HOPE-123
+                      Mobile: +91 9719569980
                     </div>
                   </div>
                 </div>
@@ -182,10 +181,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <div className="font-medium text-foreground mb-1">Email Us</div>
-                    <div className="text-sm text-muted-foreground">
-                      General: info@vidhyaloktrust.org<br />
-                      Volunteer: volunteer@vidhyaloktrust.org<br />
-                      Donations: donate@vidhyaloktrust.org
+                    <div className="text-sm text-muted-foreground break-all">
+                      vidhyaloktrustofeducation@gmail.com
                     </div>
                   </div>
                 </div>
@@ -215,7 +212,7 @@ const Contact = () => {
               <p className="text-sm mb-4 opacity-90">
                 For urgent matters, please call our emergency hotline:
               </p>
-              <div className="text-2xl font-bold">1-800-URGENT-1</div>
+              <div className="text-2xl font-bold">+91 9719569980</div>
               <p className="text-xs mt-2 opacity-80">Available 24/7</p>
             </Card>
           </div>

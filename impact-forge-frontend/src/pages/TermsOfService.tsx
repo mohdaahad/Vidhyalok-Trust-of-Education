@@ -220,7 +220,7 @@ const TermsOfService = () => {
                         <h2 className="text-2xl font-bold text-foreground mb-6">10. Governing Law</h2>
                         <div className="space-y-4 text-muted-foreground">
                             <p>
-                                These Terms shall be interpreted and governed by the laws of the United States,
+                                These Terms shall be interpreted and governed by the laws of India, specifically strictly subject to the jurisdiction of the courts of Saharanpur, Uttar Pradesh,
                                 without regard to its conflict of law provisions. Our failure to enforce any right
                                 or provision of these Terms will not be considered a waiver of those rights.
                             </p>
@@ -257,11 +257,11 @@ const TermsOfService = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3">
                                         <Mail className="w-5 h-5 text-primary" />
-                                        <span className="text-muted-foreground">legal@vidhyaloktrust.org</span>
+                                        <span className="text-muted-foreground break-all">vidhyaloktrustofeducation@gmail.com</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-5 h-5 text-primary" />
-                                        <span className="text-muted-foreground">+1 (555) 123-4567</span>
+                                        <span className="text-muted-foreground">+91 9719569980</span>
                                     </div>
                                 </div>
                             </div>
@@ -270,7 +270,7 @@ const TermsOfService = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3">
                                         <Mail className="w-5 h-5 text-primary" />
-                                        <span className="text-muted-foreground">info@vidhyaloktrust.org</span>
+                                        <span className="text-muted-foreground break-all">vidhyaloktrustofeducation@gmail.com</span>
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                         For questions about these terms or our services

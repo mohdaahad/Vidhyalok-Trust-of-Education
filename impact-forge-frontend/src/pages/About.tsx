@@ -124,7 +124,7 @@ const About = () => {
       </section>
 
       {/* Partners Section */}
-      <section className="py-20 bg-background">
+      {/* <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-foreground mb-12 text-center">Our Partners</h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
@@ -147,10 +147,10 @@ const About = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Awards Section */}
-      <section className="py-20 bg-muted/30">
+      {/* <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Award className="w-16 h-16 text-primary mx-auto mb-6" />
@@ -162,7 +162,7 @@ const About = () => {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

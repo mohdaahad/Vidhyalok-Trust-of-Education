@@ -193,11 +193,11 @@ const PrivacyPolicy = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3">
                                         <Mail className="w-5 h-5 text-primary" />
-                                        <span className="text-muted-foreground">privacy@vidhyaloktrust.org</span>
+                                        <span className="text-muted-foreground break-all">vidhyaloktrustofeducation@gmail.com</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-5 h-5 text-primary" />
-                                        <span className="text-muted-foreground">+1 (555) 123-4567</span>
+                                        <span className="text-muted-foreground">+91 9719569980</span>
                                     </div>
                                 </div>
                             </div>
