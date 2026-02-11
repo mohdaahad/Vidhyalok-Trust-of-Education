@@ -1,4 +1,7 @@
-import { Users, Target, Award, Globe } from "lucide-react";
+import { Users, Target, Award, Globe, Heart } from "lucide-react";
+import RajneeshImg from "@/assets/RAJNEESH.png";
+import AnujImg from "@/assets/Anuj Kumar.png";
+import SumitImg from "@/assets/Sumit Kumar.jpeg";
 import { Card } from "@/components/ui/card";
 
 const values = [
@@ -25,10 +28,9 @@ const values = [
 ];
 
 const team = [
-  { name: "Dr. Sarah Johnson", role: "Executive Director", image: "https://i.pravatar.cc/300?img=1" },
-  { name: "Michael Chen", role: "Program Director", image: "https://i.pravatar.cc/300?img=13" },
-  { name: "Aisha Patel", role: "Finance Director", image: "https://i.pravatar.cc/300?img=5" },
-  { name: "James Rodriguez", role: "Community Outreach", image: "https://i.pravatar.cc/300?img=12" },
+  { name: "Rajneesh", role: "President", image: RajneeshImg },
+  { name: "Anuj Kumar", role: "Secretary", image: AnujImg },
+  { name: "Sumit Kumar", role: "Treasurer", image: SumitImg },
 ];
 
 const About = () => {
@@ -101,18 +103,18 @@ const About = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-foreground mb-12 text-center">Meet Our Team</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
             {team.map((member, index) => (
               <div
                 key={index}
-                className="text-center animate-fade-in-up"
+                className="text-center animate-fade-in-up w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-2rem)]"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="relative w-48 h-48 mx-auto mb-4 rounded-full overflow-hidden border-4 border-primary shadow-lg">
+                <div className="relative w-64 h-64 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-primary shadow-lg transition-transform hover:scale-105 duration-300">
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-1">{member.name}</h3>
@@ -167,6 +169,6 @@ const About = () => {
   );
 };
 
-import { Heart } from "lucide-react";
+
 
 export default About;
