@@ -50,6 +50,7 @@ const ManageEvents = () => {
   const [isTestimonialDialogOpen, setIsTestimonialDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingAgenda, setEditingAgenda] = useState<EventAgenda | null>(null);
   const [eventAgenda, setEventAgenda] = useState<EventAgenda[]>([]);
   const [eventGallery, setEventGallery] = useState<EventGallery[]>([]);
   const [eventImpactMetrics, setEventImpactMetrics] = useState<EventImpactMetric[]>([]);
@@ -253,8 +254,8 @@ const ManageEvents = () => {
         title: "Success",
         description: "Event updated successfully",
       });
-    setIsDialogOpen(false);
-    setEditingEvent(null);
+      setIsDialogOpen(false);
+      setEditingEvent(null);
       resetEventForm();
       loadEvents();
     } catch (error: any) {
@@ -391,25 +392,44 @@ const ManageEvents = () => {
   };
 
   // Agenda handlers
-  const handleAddAgenda = async () => {
+  const handleSaveAgenda = async () => {
     if (!selectedEvent) return;
 
     try {
-      await eventService.addAgenda(selectedEvent.id, agendaForm);
-      toast({
-        title: "Success",
-        description: "Agenda item added successfully",
-      });
+      if (editingAgenda) {
+        await eventService.updateAgenda(selectedEvent.id, editingAgenda.id, agendaForm);
+        toast({
+          title: "Success",
+          description: "Agenda item updated successfully",
+        });
+      } else {
+        await eventService.addAgenda(selectedEvent.id, agendaForm);
+        toast({
+          title: "Success",
+          description: "Agenda item added successfully",
+        });
+      }
       setIsAgendaDialogOpen(false);
+      setEditingAgenda(null);
       setAgendaForm({ time: "", activity: "", display_order: 0 });
       loadEventDetails(selectedEvent.id);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to add agenda item",
+        description: error.message || "Failed to save agenda item",
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditAgendaClick = (item: EventAgenda) => {
+    setEditingAgenda(item);
+    setAgendaForm({
+      time: item.time,
+      activity: item.activity,
+      display_order: item.display_order || 0,
+    });
+    setIsAgendaDialogOpen(true);
   };
 
   const handleDeleteAgendaClick = (agendaId: number) => {
@@ -733,7 +753,7 @@ const ManageEvents = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-              <div>
+                <div>
                   <Label htmlFor="date">Event Date *</Label>
                   <Input
                     id="date"
@@ -742,7 +762,7 @@ const ManageEvents = () => {
                     value={eventForm.date}
                     onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
                   />
-              </div>
+                </div>
                 <div>
                   <Label htmlFor="time">Time</Label>
                   <Input
@@ -953,23 +973,23 @@ const ManageEvents = () => {
           </Card>
         ) : (
           events.map((event) => (
-          <Card key={event.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
+            <Card key={event.id} className="p-6">
+              <div className="flex items-start justify-between mb-4">
                 <Badge variant={event.status === "upcoming" ? "default" : "secondary"}>
-                {event.status}
-              </Badge>
-              <div className="flex gap-1">
+                  {event.status}
+                </Badge>
+                <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => openEventDetails(event)} title="View Details">
                     <Eye className="w-4 h-4" />
                   </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(event)}>
-                  <Edit className="w-4 h-4" />
-                </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(event)}>
+                    <Edit className="w-4 h-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(event.id)}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-            </div>
 
               {event.image_url && (
                 <img
@@ -979,30 +999,30 @@ const ManageEvents = () => {
                 />
               )}
 
-            <h3 className="text-lg font-bold text-foreground mb-3">{event.title}</h3>
-            
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {new Date(event.date).toLocaleDateString()}
+              <h3 className="text-lg font-bold text-foreground mb-3">{event.title}</h3>
+
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(event.date).toLocaleDateString()}
                   {event.time && ` at ${event.time}`}
-              </div>
-              <div className="flex items-center gap-2">
-                <span>📍</span>
-                {event.location}
-              </div>
-              <div className="flex items-center gap-2">
-                <span>👥</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>📍</span>
+                  {event.location}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>👥</span>
                   {event.registered_count || 0} registered
                   {event.max_participants && ` / ${event.max_participants} max`}
-              </div>
+                </div>
                 {event.category && (
                   <Badge variant="outline" className="mt-2">
                     {event.category}
                   </Badge>
                 )}
-            </div>
-          </Card>
+              </div>
+            </Card>
           ))
         )}
       </div>
@@ -1055,16 +1075,25 @@ const ManageEvents = () => {
               <TabsContent value="agenda" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Event Agenda</h3>
-                  <Dialog open={isAgendaDialogOpen} onOpenChange={setIsAgendaDialogOpen}>
+                  <Dialog open={isAgendaDialogOpen} onOpenChange={(open) => {
+                    setIsAgendaDialogOpen(open);
+                    if (!open) {
+                      setEditingAgenda(null);
+                      setAgendaForm({ time: "", activity: "", display_order: 0 });
+                    }
+                  }}>
                     <DialogTrigger asChild>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => {
+                        setEditingAgenda(null);
+                        setAgendaForm({ time: "", activity: "", display_order: 0 });
+                      }}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Agenda Item
+                        Add Item
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Add Agenda Item</DialogTitle>
+                        <DialogTitle>{editingAgenda ? "Edit Agenda Item" : "Add Agenda Item"}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <div>
@@ -1100,7 +1129,7 @@ const ManageEvents = () => {
                           <Button variant="outline" onClick={() => setIsAgendaDialogOpen(false)}>
                             Cancel
                           </Button>
-                          <Button onClick={handleAddAgenda}>Add Item</Button>
+                          <Button onClick={handleSaveAgenda}>{editingAgenda ? "Update Item" : "Add Item"}</Button>
                         </div>
                       </div>
                     </DialogContent>
@@ -1123,13 +1152,22 @@ const ManageEvents = () => {
                             </div>
                             <p className="text-sm text-muted-foreground">{item.activity}</p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteAgendaClick(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditAgendaClick(item)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteAgendaClick(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1336,7 +1374,7 @@ const ManageEvents = () => {
                               ))}
                             </SelectContent>
                           </Select>
-      </div>
+                        </div>
                         <div>
                           <Label htmlFor="metric_order">Display Order</Label>
                           <Input
@@ -1532,10 +1570,10 @@ const ManageEvents = () => {
                                     registration.status === "confirmed"
                                       ? "default"
                                       : registration.status === "cancelled"
-                                      ? "destructive"
-                                      : registration.status === "attended"
-                                      ? "secondary"
-                                      : "outline"
+                                        ? "destructive"
+                                        : registration.status === "attended"
+                                          ? "secondary"
+                                          : "outline"
                                   }
                                 >
                                   {registration.status}

@@ -2,9 +2,9 @@ import { Target, Users, Heart, TrendingUp } from "lucide-react";
 import missionIcon from "@/assets/mission-icon.jpg";
 
 const stats = [
-  { icon: Users, value: "50K+", label: "Lives Impacted" },
-  { icon: Heart, value: "1000+", label: "Active Volunteers" },
-  { icon: Target, value: "200+", label: "Projects Completed" },
+  { icon: Users, value: "1K+", label: "Lives Impacted" },
+  { icon: Heart, value: "50+", label: "Active Volunteers" },
+  { icon: Target, value: "10+", label: "Projects Completed" },
   { icon: TrendingUp, value: "95%", label: "Success Rate" },
 ];
 
@@ -23,7 +23,7 @@ const MissionSection = () => {
               />
             </div>
             <div className="absolute -bottom-6 -right-6 bg-secondary text-secondary-foreground p-8 rounded-2xl shadow-lg">
-              <p className="text-4xl font-bold">15+</p>
+              <p className="text-4xl font-bold">1+</p>
               <p className="text-sm">Years of Impact</p>
             </div>
           </div>

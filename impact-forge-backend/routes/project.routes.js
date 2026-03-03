@@ -11,6 +11,8 @@ import {
   deleteProject,
   addProjectUpdate,
   getProjectUpdates,
+  updateProjectUpdate,
+  deleteProjectUpdate,
   addProjectGalleryImage,
   getProjectGallery,
   deleteProjectGalleryImage,
@@ -113,6 +115,28 @@ router.post(
 
 // Get project updates
 router.get("/:id/updates", validateId("id"), getProjectUpdates);
+
+// Delete project update (admin only)
+router.delete(
+  "/:id/updates/:updateId",
+  protect,
+  authorize("admin"),
+  validateId("id"),
+  validateId("updateId"),
+  deleteProjectUpdate
+);
+
+// Update project update (admin only)
+router.put(
+  "/:id/updates/:updateId",
+  protect,
+  authorize("admin"),
+  validateId("id"),
+  validateId("updateId"),
+  // Note: we can reuse addProjectUpdateValidation if it's the same schema, or skip if we trust admins. We'll skip or use addProjectUpdateValidation
+  addProjectUpdateValidation,
+  updateProjectUpdate
+);
 
 // Add project gallery image (admin only)
 router.post(

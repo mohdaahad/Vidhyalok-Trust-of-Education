@@ -219,7 +219,7 @@ const Contact = () => {
         </div>
 
         {/* Map Section */}
-        <div className="mt-16">
+        {/* <div className="mt-16">
           <Card className="p-4">
             <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
               <div className="text-center">
@@ -229,7 +229,7 @@ const Contact = () => {
               </div>
             </div>
           </Card>
-        </div>
+        </div> */}
       </div>
     </div>
   );

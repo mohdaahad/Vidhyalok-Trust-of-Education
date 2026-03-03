@@ -220,6 +220,13 @@ export const eventService = {
   },
 
   /**
+   * Update event agenda item (admin only)
+   */
+  updateAgenda: async (id: number | string, agendaId: number | string, data: { time?: string; activity?: string; display_order?: number }) => {
+    return api.put<EventAgenda>(API_ENDPOINTS.EVENTS.UPDATE_AGENDA(id, agendaId), data);
+  },
+
+  /**
    * Delete event agenda item (admin only)
    */
   deleteAgenda: async (id: number | string, agendaId: number | string) => {

@@ -1,23 +1,9 @@
 import Donation from "../models/Donation.model.js";
 import Project from "../models/Project.model.js";
-import Razorpay from "razorpay";
-import crypto from "crypto";
 import { Op } from "sequelize";
+import { generateDonationReceiptBuffer } from "../utils/pdfGenerator.js";
 
-// Initialize Razorpay only if credentials are available
-let razorpay = null;
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-  try {
-    razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-  } catch (error) {
-    console.error("Failed to initialize Razorpay:", error);
-  }
-}
-
-// @desc    Create donation
+// @desc    Create donation (bank transfer)
 // @route   POST /api/donations
 // @access  Public
 export const createDonation = async (req, res, next) => {
@@ -32,6 +18,7 @@ export const createDonation = async (req, res, next) => {
       pan_number,
       is_anonymous,
       message,
+      utr_number,
     } = req.body;
 
     // Generate unique transaction ID
@@ -40,42 +27,13 @@ export const createDonation = async (req, res, next) => {
       .substr(2, 9)
       .toUpperCase()}`;
 
-    // Create Razorpay order
-    const options = {
-      amount: amount * 100, // Convert to paise
-      currency: "INR",
-      receipt: transaction_id,
-      notes: {
-        email: donor_email,
-        name: donor_name,
-        donation_type: donation_type || "one-time",
-        project_id: project_id || null,
-      },
-    };
-
-    let order = null;
-    if (!razorpay) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Payment gateway is not configured. Please contact administrator.",
-      });
+    // Handle uploaded screenshot
+    let payment_screenshot = null;
+    if (req.file) {
+      payment_screenshot = `/uploads/donations/${req.file.filename}`;
     }
 
-    try {
-      order = await razorpay.orders.create(options);
-    } catch (razorpayError) {
-      console.error("Razorpay error:", razorpayError);
-      return res.status(500).json({
-        success: false,
-        message:
-          razorpayError.error?.description ||
-          "Failed to create payment order. Please check Razorpay credentials.",
-        error: razorpayError.error || razorpayError.message,
-      });
-    }
-
-    // Create donation record
+    // Create donation record with pending status (admin will mark as completed after verifying bank transfer)
     const donation = await Donation.create({
       transaction_id,
       amount,
@@ -87,87 +45,20 @@ export const createDonation = async (req, res, next) => {
       pan_number: pan_number || null,
       is_anonymous: is_anonymous || false,
       message: message || null,
-      razorpay_order_id: order?.id || null,
-      status: order ? "pending" : "pending",
-      payment_method: "razorpay",
+      utr_number: utr_number || null,
+      payment_screenshot,
+      status: "pending",
+      payment_method: "bank-transfer",
     });
+
+
 
     res.status(201).json({
       success: true,
       data: {
         donation,
-        order: order || null,
       },
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Verify payment
-// @route   POST /api/donations/verify-payment
-// @access  Public
-export const verifyPayment = async (req, res, next) => {
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
-
-    if (!process.env.RAZORPAY_KEY_SECRET) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Payment gateway is not configured. Please contact administrator.",
-      });
-    }
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    if (expectedSignature === razorpay_signature) {
-      // Update donation status
-      const donation = await Donation.findOne({
-        where: { razorpay_order_id },
-      });
-
-      if (!donation) {
-        return res.status(404).json({
-          success: false,
-          message: "Donation not found",
-        });
-      }
-
-      await donation.update({
-        razorpay_payment_id,
-        razorpay_signature,
-        status: "completed",
-      });
-
-      // Update project raised amount if project specified
-      if (donation.project_id) {
-        const project = await Project.findByPk(donation.project_id);
-        if (project) {
-          await project.increment("amount_raised", {
-            by: parseFloat(donation.amount),
-          });
-        }
-      }
-
-      // TODO: Send confirmation email
-
-      res.status(200).json({
-        success: true,
-        message: "Payment verified successfully",
-        data: donation,
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: "Payment verification failed",
-      });
-    }
   } catch (error) {
     next(error);
   }
@@ -206,10 +97,21 @@ export const getDonations = async (req, res, next) => {
       limit: 100,
     });
 
+    // Mask anonymous donor details for public API
+    const maskedDonations = donations.map((d) => {
+      const donation = d.toJSON();
+      if (donation.is_anonymous) {
+        donation.donor_name = "Anonymous Donor";
+        donation.donor_email = "***@***.com";
+        donation.donor_phone = null;
+      }
+      return donation;
+    });
+
     res.status(200).json({
       success: true,
-      count: donations.length,
-      data: donations,
+      count: maskedDonations.length,
+      data: maskedDonations,
     });
   } catch (error) {
     next(error);
@@ -329,7 +231,25 @@ export const updateDonation = async (req, res, next) => {
       });
     }
 
+    const previousStatus = donation.status;
     await donation.update(req.body);
+
+    // Update project raised amount if status changed to completed
+    if (
+      previousStatus !== "completed" &&
+      donation.status === "completed" &&
+      donation.project_id
+    ) {
+      const project = await Project.findByPk(donation.project_id);
+      if (project) {
+        await project.increment("amount_raised", {
+          by: parseFloat(donation.amount),
+        });
+      }
+    }
+
+
+
 
     res.status(200).json({
       success: true,
@@ -362,12 +282,14 @@ export const generateReceipt = async (req, res, next) => {
       });
     }
 
-    // TODO: Generate PDF receipt using jsPDF
-    res.status(200).json({
-      success: true,
-      message: "Receipt generation - to be implemented",
-      data: donation,
-    });
+    const pdfBuffer = generateDonationReceiptBuffer(donation);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt-${donation.transaction_id}.pdf`
+    );
+    res.send(pdfBuffer);
   } catch (error) {
     next(error);
   }

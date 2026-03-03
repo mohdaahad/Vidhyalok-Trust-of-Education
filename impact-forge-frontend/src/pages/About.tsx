@@ -42,7 +42,7 @@ const About = () => {
           <div className="max-w-3xl mx-auto text-center animate-fade-in">
             <h1 className="text-primary-foreground mb-6">About Vidhyalok Trust of Education</h1>
             <p className="text-xl text-primary-foreground/90 leading-relaxed">
-              Since 2024, we've been dedicated to creating positive change through sustainable
+              Since 2025, we've been dedicated to creating positive change through sustainable
               development, education, and healthcare initiatives across India.
             </p>
           </div>

@@ -62,15 +62,11 @@ const Footer = () => {
               <a href="https://facebook.com/vidhyaloktrust" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary transition-smooth">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="https://twitter.com/vidhyaloktrust" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary transition-smooth">
-                <Twitter className="w-5 h-5" />
-              </a>
+             
               <a href="https://instagram.com/vidhyaloktrust" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary transition-smooth">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://linkedin.com/company/vidhyaloktrust" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted hover:bg-primary transition-smooth">
-                <Linkedin className="w-5 h-5" />
-              </a>
+             
             </div>
           </div>
 
@@ -152,7 +148,7 @@ const Footer = () => {
         <div className="pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-muted-foreground text-sm">
-              © 2025 Vidhyalok Trust of Education. All rights reserved.
+              © 2026 Vidhyalok Trust of Education. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link to="/privacy-policy" className="text-muted-foreground text-sm hover:text-primary transition-smooth">

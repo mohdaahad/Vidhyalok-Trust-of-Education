@@ -13,6 +13,7 @@ import {
   getMyEvents,
   addEventAgenda,
   getEventAgenda,
+  updateEventAgenda,
   deleteEventAgenda,
   addEventGalleryImage,
   getEventGallery,
@@ -140,6 +141,15 @@ router.delete(
   validateId("id"),
   validateId("agendaId"),
   deleteEventAgenda
+);
+
+router.put(
+  "/:id/agenda/:agendaId",
+  protect,
+  authorize("admin"),
+  validateId("id"),
+  validateId("agendaId"),
+  updateEventAgenda
 );
 
 // Event Gallery Routes

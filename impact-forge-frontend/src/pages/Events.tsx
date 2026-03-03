@@ -25,14 +25,11 @@ const Events = () => {
       const allEvents = response.data || [];
 
       // Separate upcoming and past events
-      const now = new Date();
       const upcoming = allEvents.filter((event) => {
-        const eventDate = new Date(event.date);
-        return eventDate >= now && event.status === "upcoming";
+        return event.status === "upcoming" || event.status === "ongoing";
       });
       const past = allEvents.filter((event) => {
-        const eventDate = new Date(event.date);
-        return eventDate < now || event.status === "completed";
+        return event.status === "completed" || event.status === "cancelled";
       });
 
       setUpcomingEvents(upcoming);
@@ -107,7 +104,7 @@ const Events = () => {
                     return (
                       <Card
                         key={event.id}
-                        className="overflow-hidden transition-smooth hover:shadow-lg hover:-translate-y-2 animate-fade-in-up"
+                        className="overflow-hidden flex flex-col transition-smooth hover:shadow-lg hover:-translate-y-2 animate-fade-in-up"
                         style={{ animationDelay: `${index * 0.1}s` }}
                       >
                         {imageUrl && (
@@ -119,12 +116,20 @@ const Events = () => {
                             />
                           </div>
                         )}
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <Badge variant="secondary">{event.category}</Badge>
-                            <Badge variant={isLimited ? "destructive" : "default"}>
-                              {isLimited ? "Limited Spots" : "Open Registration"}
-                            </Badge>
+                        <div className="p-6 flex flex-col flex-grow">
+                          <div className="flex flex-col gap-3 mb-4">
+                            <div className="flex items-start justify-between">
+                              <Badge variant="secondary">{event.category}</Badge>
+                              <Badge variant={isLimited ? "destructive" : "default"}>
+                                {isLimited ? "Limited Spots" : "Open Registration"}
+                              </Badge>
+                            </div>
+                            {event.impact && (
+                              <div className="bg-primary/5 text-primary p-3 rounded-lg text-sm font-medium border border-primary/10">
+                                <span className="font-bold block mb-1">Impact Goal:</span>
+                                {event.impact}
+                              </div>
+                            )}
                           </div>
 
                           <h3 className="text-xl font-bold text-foreground mb-3">{event.title}</h3>
@@ -154,12 +159,14 @@ const Events = () => {
                             </div>
                           </div>
 
-                          <Button variant="default" className="w-full group" asChild>
-                            <Link to={`/events/${event.id}`}>
-                              Register Now
-                              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                            </Link>
-                          </Button>
+                          <div className="mt-auto pt-4">
+                            <Button variant="default" className="w-full group" asChild>
+                              <Link to={`/events/${event.id}`}>
+                                Register Now
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     );
@@ -191,7 +198,7 @@ const Events = () => {
                     return (
                       <Card
                         key={event.id}
-                        className="p-6 transition-smooth hover:shadow-lg animate-fade-in-up"
+                        className="p-6 flex flex-col transition-smooth hover:shadow-lg animate-fade-in-up"
                         style={{ animationDelay: `${index * 0.1}s` }}
                       >
                         {imageUrl && (
@@ -203,10 +210,13 @@ const Events = () => {
                             />
                           </div>
                         )}
-                        <div className="flex items-start justify-between mb-4">
-                          <Badge variant="outline">{event.category}</Badge>
+                        <div className="flex flex-col gap-3 mb-4">
+                          <div className="flex items-start justify-between">
+                            <Badge variant="outline">{event.category}</Badge>
+                          </div>
                           {event.impact && (
-                            <div className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm font-medium">
+                            <div className="bg-primary/5 text-primary p-3 rounded-lg text-sm font-medium border border-primary/10">
+                              <span className="font-bold block mb-1">Achieved Impact:</span>
                               {event.impact}
                             </div>
                           )}
@@ -232,9 +242,11 @@ const Events = () => {
                           </div>
                         </div>
 
-                        <Button variant="outline" className="w-full" asChild>
-                          <Link to={`/events/${event.id}`}>View Event Details</Link>
-                        </Button>
+                        <div className="mt-auto pt-4">
+                          <Button variant="outline" className="w-full" asChild>
+                            <Link to={`/events/${event.id}`}>View Event Details</Link>
+                          </Button>
+                        </div>
                       </Card>
                     );
                   })}

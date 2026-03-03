@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
-import { sendDonationConfirmation, sendDonationStatusUpdate } from "../services/email.service.js";
+import * as emailService from "../services/email.service.js";
+import { generateDonationReceiptBuffer } from "../utils/pdfGenerator.js";
 
 const Donation = sequelize.define(
   "Donation",
@@ -53,7 +54,7 @@ const Donation = sequelize.define(
   },
   payment_method: {
       type: DataTypes.ENUM("razorpay", "bank-transfer", "cash", "other"),
-      defaultValue: "razorpay",
+      defaultValue: "bank-transfer",
   },
   donation_type: {
       type: DataTypes.ENUM("one-time", "monthly"),
@@ -78,15 +79,11 @@ const Donation = sequelize.define(
         this.setDataValue("pan_number", value?.toUpperCase());
       },
   },
-    razorpay_order_id: {
+    utr_number: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    razorpay_payment_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    razorpay_signature: {
+    payment_screenshot: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -107,25 +104,39 @@ const Donation = sequelize.define(
     hooks: {
       afterCreate: async (donation) => {
         try {
-          // Send confirmation email when donation is created
-          await sendDonationConfirmation(donation);
+          // Generate PDF and attach to email
+          const pdfBuffer = generateDonationReceiptBuffer(donation);
+          donation.attachments = [
+            {
+              filename: `receipt-${donation.transaction_id}.pdf`,
+              content: pdfBuffer,
+            },
+          ];
+          await emailService.sendDonationConfirmation(donation);
           console.log(`✅ Donation confirmation email sent to ${donation.donor_email}`);
         } catch (error) {
           console.error("❌ Error sending donation confirmation email:", error);
-          // Don't throw error to prevent blocking donation creation
         }
       },
       afterUpdate: async (donation) => {
         try {
-          // Send status update email if status changed
           if (donation.changed && donation.changed("status")) {
             const oldStatus = donation.previous ? donation.previous("status") : null;
-            await sendDonationStatusUpdate(donation, oldStatus);
+            
+            // Generate updated PDF and attach to email
+            const pdfBuffer = generateDonationReceiptBuffer(donation);
+            donation.attachments = [
+              {
+                filename: `receipt-${donation.transaction_id}.pdf`,
+                content: pdfBuffer,
+              },
+            ];
+
+            await emailService.sendDonationStatusUpdate(donation, oldStatus);
             console.log(`✅ Donation status update email sent to ${donation.donor_email}`);
           }
         } catch (error) {
           console.error("❌ Error sending donation status update email:", error);
-          // Don't throw error to prevent blocking status update
         }
       },
     },

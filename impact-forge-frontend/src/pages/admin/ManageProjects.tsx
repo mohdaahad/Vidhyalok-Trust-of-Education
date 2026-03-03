@@ -23,6 +23,7 @@ const ManageProjects = () => {
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingUpdate, setEditingUpdate] = useState<ProjectUpdate | null>(null);
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdate[]>([]);
   const [projectGallery, setProjectGallery] = useState<ProjectGallery[]>([]);
   const { toast } = useToast();
@@ -64,8 +65,10 @@ const ManageProjects = () => {
   const [galleryImageFile, setGalleryImageFile] = useState<File | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteGalleryDialogOpen, setDeleteGalleryDialogOpen] = useState(false);
+  const [deleteUpdateDialogOpen, setDeleteUpdateDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
   const [galleryToDelete, setGalleryToDelete] = useState<number | null>(null);
+  const [updateToDelete, setUpdateToDelete] = useState<number | null>(null);
 
   // File input refs
   const projectImageInputRef = useRef<HTMLInputElement>(null);
@@ -251,22 +254,66 @@ const ManageProjects = () => {
     setIsDialogOpen(true);
   };
 
-  const handleAddUpdate = async () => {
+  const handleSaveUpdate = async () => {
     if (!selectedProject) return;
 
     try {
-      await projectService.addUpdate(selectedProject.id, updateForm);
-      toast({
-        title: "Success",
-        description: "Project update added successfully",
-      });
+      if (editingUpdate) {
+        await projectService.updateUpdate(selectedProject.id, editingUpdate.id, updateForm);
+        toast({
+          title: "Success",
+          description: "Project update modified successfully",
+        });
+      } else {
+        await projectService.addUpdate(selectedProject.id, updateForm);
+        toast({
+          title: "Success",
+          description: "Project update added successfully",
+        });
+      }
       setIsUpdateDialogOpen(false);
+      setEditingUpdate(null);
       setUpdateForm({ title: "", content: "" });
       loadProjectDetails(selectedProject.id);
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to add update",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditUpdateClick = (update: ProjectUpdate) => {
+    setEditingUpdate(update);
+    setUpdateForm({
+      title: update.title,
+      content: update.content,
+    });
+    setIsUpdateDialogOpen(true);
+  };
+
+  const handleDeleteUpdateClick = (updateId: number) => {
+    setUpdateToDelete(updateId);
+    setDeleteUpdateDialogOpen(true);
+  };
+
+  const handleDeleteUpdate = async () => {
+    if (!selectedProject || !updateToDelete) return;
+
+    try {
+      await projectService.deleteUpdate(selectedProject.id, updateToDelete);
+      toast({
+        title: "Success",
+        description: "Project update deleted successfully",
+      });
+      setDeleteUpdateDialogOpen(false);
+      setUpdateToDelete(null);
+      loadProjectDetails(selectedProject.id);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete update",
         variant: "destructive",
       });
     }
@@ -714,16 +761,25 @@ const ManageProjects = () => {
               <TabsContent value="updates" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Project Updates</h3>
-                  <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+                  <Dialog open={isUpdateDialogOpen} onOpenChange={(open) => {
+                    setIsUpdateDialogOpen(open);
+                    if (!open) {
+                      setEditingUpdate(null);
+                      setUpdateForm({ title: "", content: "" });
+                    }
+                  }}>
                     <DialogTrigger asChild>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => {
+                        setEditingUpdate(null);
+                        setUpdateForm({ title: "", content: "" });
+                      }}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Update
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Add Project Update</DialogTitle>
+                        <DialogTitle>{editingUpdate ? "Edit Project Update" : "Add Project Update"}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <div>
@@ -747,7 +803,7 @@ const ManageProjects = () => {
                         </div>
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>Cancel</Button>
-                          <Button onClick={handleAddUpdate}>Add Update</Button>
+                          <Button onClick={handleSaveUpdate}>{editingUpdate ? "Update" : "Add Update"}</Button>
                         </div>
                       </div>
                     </DialogContent>
@@ -769,6 +825,14 @@ const ManageProjects = () => {
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(update.update_date).toLocaleDateString()}
                             </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEditUpdateClick(update)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteUpdateClick(update.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
                           </div>
                         </div>
                       </Card>
@@ -1063,6 +1127,23 @@ const ManageProjects = () => {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setGalleryToDelete(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteGalleryImage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Delete Update Confirmation Dialog */}
+      <AlertDialog open={deleteUpdateDialogOpen} onOpenChange={setDeleteUpdateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project Update</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this update? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUpdateToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUpdate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -100,6 +100,7 @@ export const sendDonationConfirmation = async (donation) => {
     to: donation.donor_email,
     subject: "Donation Confirmation - Vidhyalok Trust of Education",
     html,
+    attachments: donation.attachments || [],
   });
 };
 
@@ -673,6 +674,7 @@ export const sendDonationStatusUpdate = async (donation, oldStatus) => {
     to: donation.donor_email,
     subject: `Donation Status Update - Vidhyalok Trust of Education`,
     html,
+    attachments: donation.attachments || [],
   });
 };
 

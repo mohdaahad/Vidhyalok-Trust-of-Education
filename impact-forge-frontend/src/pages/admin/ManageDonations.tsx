@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Mail, Phone, DollarSign, Eye, Calendar, FileText, Receipt } from "lucide-react";
+import { Search, Mail, Phone, DollarSign, Eye, Calendar, FileText, Receipt, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -263,8 +263,13 @@ const ManageDonations = () => {
                                     </TableCell>
                                     <TableCell>
                                         <div className="space-y-1">
-                                            <div className="font-medium">
-                                                {donation.is_anonymous ? "Anonymous" : donation.donor_name}
+                                            <div className="font-medium flex items-center gap-2">
+                                                {donation.donor_name}
+                                                {donation.is_anonymous && (
+                                                    <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                                        Anonymous
+                                                    </Badge>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Mail className="w-3 h-3" />
@@ -376,9 +381,12 @@ const ManageDonations = () => {
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">Donor Name</p>
-                                <p className="text-foreground">
-                                    {selectedDonation.is_anonymous ? "Anonymous" : selectedDonation.donor_name}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-foreground">{selectedDonation.donor_name}</p>
+                                    {selectedDonation.is_anonymous && (
+                                        <Badge variant="outline" className="text-xs">Anonymous</Badge>
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground mb-1">Email</p>
@@ -426,18 +434,27 @@ const ManageDonations = () => {
                                     <p className="text-foreground font-mono">{selectedDonation.pan_number}</p>
                                 </div>
                             )}
-                            {selectedDonation.razorpay_order_id && (
+                            {selectedDonation.utr_number && (
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground mb-1">Razorpay Order ID</p>
-                                    <p className="text-foreground font-mono text-sm">{selectedDonation.razorpay_order_id}</p>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">UTR / Bank Transaction ID</p>
+                                    <p className="text-foreground font-mono">{selectedDonation.utr_number}</p>
                                 </div>
                             )}
-                            {selectedDonation.razorpay_payment_id && (
+                            {selectedDonation.payment_screenshot && (
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground mb-1">Razorpay Payment ID</p>
-                                    <p className="text-foreground font-mono text-sm">{selectedDonation.razorpay_payment_id}</p>
+                                    <p className="text-sm font-medium text-muted-foreground mb-1">Payment Screenshot</p>
+                                    <a
+                                        href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${selectedDonation.payment_screenshot}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline flex items-center w-fit gap-2"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        View Screenshot
+                                    </a>
                                 </div>
                             )}
+
                             <div className="flex items-center justify-between pt-4 border-t">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground mb-1">Status</p>

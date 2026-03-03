@@ -93,10 +93,10 @@ export const projectService = {
       if (data.start_date) formData.append("start_date", data.start_date);
       if (data.end_date) formData.append("end_date", data.end_date);
       if (data.beneficiaries) formData.append("beneficiaries", data.beneficiaries);
-      
+
       return api.post<Project>(API_ENDPOINTS.PROJECTS.CREATE, formData, true, true);
     }
-    
+
     // Otherwise use JSON
     return api.post<Project>(API_ENDPOINTS.PROJECTS.CREATE, data);
   },
@@ -120,10 +120,10 @@ export const projectService = {
       if (data.start_date) formData.append("start_date", data.start_date);
       if (data.end_date) formData.append("end_date", data.end_date);
       if (data.beneficiaries) formData.append("beneficiaries", data.beneficiaries);
-      
+
       return api.put<Project>(API_ENDPOINTS.PROJECTS.UPDATE(id), formData, true, true);
     }
-    
+
     // Otherwise use JSON
     return api.put<Project>(API_ENDPOINTS.PROJECTS.UPDATE(id), data);
   },
@@ -140,6 +140,20 @@ export const projectService = {
    */
   addUpdate: async (id: number | string, data: { title: string; content: string }) => {
     return api.post<ProjectUpdate>(API_ENDPOINTS.PROJECTS.ADD_UPDATE(id), data);
+  },
+
+  /**
+   * Update project update (admin only)
+   */
+  updateUpdate: async (id: number | string, updateId: number | string, data: { title?: string; content?: string }) => {
+    return api.put<ProjectUpdate>(API_ENDPOINTS.PROJECTS.UPDATE_UPDATE(id, updateId), data);
+  },
+
+  /**
+   * Delete project update (admin only)
+   */
+  deleteUpdate: async (id: number | string, updateId: number | string) => {
+    return api.delete(API_ENDPOINTS.PROJECTS.DELETE_UPDATE(id, updateId));
   },
 
   /**
@@ -163,10 +177,10 @@ export const projectService = {
       formData.append("image", data.image);
       if (data.caption) formData.append("caption", data.caption);
       if (data.display_order !== undefined) formData.append("display_order", data.display_order.toString());
-      
+
       return api.post<ProjectGallery>(API_ENDPOINTS.PROJECTS.ADD_GALLERY(id), formData, true, true);
     }
-    
+
     // Otherwise use JSON with image_url
     return api.post<ProjectGallery>(API_ENDPOINTS.PROJECTS.ADD_GALLERY(id), data);
   },

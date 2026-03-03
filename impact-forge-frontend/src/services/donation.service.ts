@@ -20,9 +20,9 @@ export interface Donation {
   is_anonymous: boolean;
   message?: string;
   pan_number?: string;
-  razorpay_order_id?: string;
-  razorpay_payment_id?: string;
-  razorpay_signature?: string;
+  utr_number?: string;
+  payment_screenshot?: string;
+
   created_at?: string;
   updated_at?: string;
   project?: {
@@ -41,7 +41,8 @@ export interface CreateDonationData {
   project_id?: number;
   message?: string;
   pan_number?: string;
-  is_anonymous?: boolean;
+  utr_number?: string;
+  payment_screenshot?: File;
 }
 
 export const donationService = {
@@ -66,8 +67,9 @@ export const donationService = {
   /**
    * Create a donation
    */
-  createDonation: async (data: CreateDonationData) => {
-    return api.post<Donation>(API_ENDPOINTS.DONATIONS.CREATE, data, false);
+  createDonation: async (data: any) => {
+    const isFormData = data instanceof FormData;
+    return api.post<Donation>(API_ENDPOINTS.DONATIONS.CREATE, data, false, isFormData);
   },
 
   /**
@@ -84,12 +86,7 @@ export const donationService = {
     return api.get<Donation[]>(API_ENDPOINTS.DONATIONS.MY_DONATIONS);
   },
 
-  /**
-   * Verify payment
-   */
-  verifyPayment: async (data: any) => {
-    return api.post(API_ENDPOINTS.DONATIONS.VERIFY_PAYMENT, data, false);
-  },
+
 
   /**
    * Generate receipt (returns blob for PDF download)
@@ -97,7 +94,7 @@ export const donationService = {
   generateReceipt: async (id: number | string) => {
     const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
     const token = localStorage.getItem("token");
-    
+
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.DONATIONS.RECEIPT(id)}`, {
       method: "GET",
       headers: {
@@ -125,7 +122,7 @@ export const donationService = {
   generateTaxCertificate: async (id: number | string) => {
     const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
     const token = localStorage.getItem("token");
-    
+
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.DONATIONS.TAX_CERTIFICATE(id)}`, {
       method: "GET",
       headers: {

@@ -259,6 +259,61 @@ export const getProjectUpdates = async (req, res, next) => {
   }
 };
 
+// @desc    Update project update
+// @route   PUT /api/projects/:id/updates/:updateId
+// @access  Private/Admin
+export const updateProjectUpdate = async (req, res, next) => {
+  try {
+    const update = await ProjectUpdate.findByPk(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({
+        success: false,
+        message: "Project update not found",
+      });
+    }
+
+    const { title, content } = req.body;
+
+    await update.update({
+      title: title || update.title,
+      content: content || update.content,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: update,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete project update
+// @route   DELETE /api/projects/:id/updates/:updateId
+// @access  Private/Admin
+export const deleteProjectUpdate = async (req, res, next) => {
+  try {
+    const update = await ProjectUpdate.findByPk(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({
+        success: false,
+        message: "Project update not found",
+      });
+    }
+
+    await update.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: "Project update deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Add project gallery image
 // @route   POST /api/projects/:id/gallery
 // @access  Private/Admin

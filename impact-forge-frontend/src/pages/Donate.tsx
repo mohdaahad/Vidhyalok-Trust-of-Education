@@ -1,20 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Shield, Award, CreditCard, DollarSign, Loader2 } from "lucide-react";
+import { Heart, Shield, Award, Landmark, DollarSign, Loader2, Copy, CheckCircle, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { useToast } from "@/hooks/use-toast";
 import { donationService } from "@/services/donation.service";
-import logo from "@/assets/logo.png";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+const BANK_DETAILS = {
+  bankName: "Punjab National Bank (PNB)",
+  branch: "Islam Nagar, Saharanpur, U.P. - 247451",
+  accountName: "Vidhyalok Trust of Education",
+  accountNumber: "1336002100002765",
+  ifscCode: "PUNB0133600",
+  accountType: "Current Account",
+};
 
 const donationAmounts = [
   { value: "500", label: "₹500", impact: "Provides school supplies for 2 children" },
@@ -33,22 +35,22 @@ const Donate = () => {
     email: "",
     phone: "",
     pan: "",
-    anonymous: false,
+    utr: "",
   });
+  const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load Razorpay script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    toast({
+      title: "Copied!",
+      description: `${field} copied to clipboard`,
+    });
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,10 +66,10 @@ const Donate = () => {
       return;
     }
 
-    if (!formData.name || !formData.email) {
+    if (!formData.name || !formData.email || !formData.utr || !screenshot) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields, including UTR and screenshot.",
         variant: "destructive",
       });
       return;
@@ -76,99 +78,34 @@ const Donate = () => {
     try {
       setIsSubmitting(true);
 
-      // Create donation
-      const donationData: any = {
-        amount: finalAmount,
-        donor_name: formData.name,
-        donor_email: formData.email,
-        donation_type: "one-time",
-      };
+      const submissionData = new FormData();
+      submissionData.append("amount", finalAmount.toString());
+      submissionData.append("donor_name", formData.name);
+      submissionData.append("donor_email", formData.email);
+      submissionData.append("donation_type", "one-time");
+      submissionData.append("payment_method", "bank-transfer");
+      submissionData.append("utr_number", formData.utr);
 
-      if (formData.phone) donationData.donor_phone = formData.phone;
-      if (formData.pan) donationData.pan_number = formData.pan;
-      if (formData.anonymous) donationData.is_anonymous = true;
+      if (formData.phone) submissionData.append("donor_phone", formData.phone);
+      if (formData.pan) submissionData.append("pan_number", formData.pan);
+      if (screenshot) submissionData.append("payment_screenshot", screenshot);
 
-      const response = await donationService.createDonation(donationData);
-
+      const response = await donationService.createDonation(submissionData);
       const responseData = response.data as any;
       const donation = responseData.donation;
-      const order = responseData.order;
 
-      if (!order || !window.Razorpay) {
-        toast({
-          title: "Payment Error",
-          description: "Payment gateway is not available. Please try again later.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Initialize Razorpay checkout
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Vidhyalok Trust of Education",
-        description: `Donation of ₹${finalAmount}`,
-        order_id: order.id,
-        image: logo,
-        handler: async function (response: any) {
-          try {
-            // Verify payment
-            await donationService.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            // Redirect to success page
-            navigate(`/donation-success?amount=${finalAmount}&transaction_id=${donation.transaction_id}`);
-          } catch (error: any) {
-            toast({
-              title: "Payment Verification Failed",
-              description: error.message || "Failed to verify payment",
-              variant: "destructive",
-            });
-          }
-        },
-        prefill: {
-          name: formData.name,
-          email: formData.email,
-          contact: formData.phone || "",
-        },
-        theme: {
-          color: "#1e40af", // Primary blue color
-        },
-        modal: {
-          ondismiss: function () {
-            setIsSubmitting(false);
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (response: any) {
-        toast({
-          title: "Payment Failed",
-          description: response.error.description || "Payment could not be processed",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-      });
-
-      razorpay.open();
+      // Redirect to success page
+      navigate(`/donation-success?amount=${finalAmount}&transaction_id=${donation.transaction_id}`);
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to process donation",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
-
-  const amount = selectedAmount === "custom" ? customAmount : selectedAmount;
 
   return (
     <div className="min-h-screen pt-16">
@@ -189,9 +126,62 @@ const Donate = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Donation Form */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Bank Details Card */}
+            <Card className="p-8 border-2 border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-primary/10 p-3 rounded-xl">
+                  <Building2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">Bank Transfer Details</h2>
+                  <p className="text-sm text-muted-foreground">Transfer your donation to the following account</p>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  { label: "Bank Name", value: BANK_DETAILS.bankName, field: "Bank Name" },
+                  { label: "Branch", value: BANK_DETAILS.branch, field: "Branch" },
+                  { label: "Account Name", value: BANK_DETAILS.accountName, field: "Account Name" },
+                  { label: "Account Number", value: BANK_DETAILS.accountNumber, field: "Account Number" },
+                  { label: "IFSC Code", value: BANK_DETAILS.ifscCode, field: "IFSC Code" },
+                  { label: "Account Type", value: BANK_DETAILS.accountType, field: "Account Type" },
+                ].map((item) => (
+                  <div
+                    key={item.field}
+                    className="flex items-center justify-between gap-2 bg-background rounded-lg p-3 border"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground font-medium">{item.label}</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{item.value}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(item.value, item.field)}
+                      className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                      title={`Copy ${item.label}`}
+                    >
+                      {copiedField === item.field ? (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  <strong>Note:</strong> After transferring, please fill in your details below so we can track your donation and send you a receipt.
+                </p>
+              </div>
+            </Card>
+
+            {/* Donation Form */}
             <Card className="p-8">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Choose Your Impact</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">Confirm Your Donation</h2>
 
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Amount Selection */}
@@ -282,17 +272,34 @@ const Donate = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="anonymous"
-                      checked={formData.anonymous}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, anonymous: checked as boolean })
-                      }
+                  <div>
+                    <Label htmlFor="utr">Transaction ID / UTR *</Label>
+                    <Input
+                      id="utr"
+                      type="text"
+                      placeholder="e.g. 123456789012"
+                      value={formData.utr}
+                      onChange={(e) => setFormData({ ...formData, utr: e.target.value })}
+                      required
                     />
-                    <Label htmlFor="anonymous" className="cursor-pointer text-sm">
-                      Make this donation anonymous
-                    </Label>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="screenshot">Upload Screenshot *</Label>
+                    <Input
+                      id="screenshot"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setScreenshot(e.target.files[0]);
+                        }
+                      }}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please upload a clear screenshot of successful payment
+                    </p>
                   </div>
                 </div>
 
@@ -301,45 +308,23 @@ const Donate = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Processing...
+                      Submitting...
                     </>
                   ) : (
                     <>
-                      <CreditCard className="w-5 h-5 mr-2" />
-                      Proceed to Payment
+                      <Landmark className="w-5 h-5 mr-2" />
+                      I've Transferred – Confirm Donation
                     </>
                   )}
                 </Button>
 
                 <div className="flex flex-col items-center gap-2 pt-4">
                   <p className="text-xs text-center text-muted-foreground">
-                    Your donation is secure and encrypted.
+                    Your donation will be verified by our team and you'll receive a confirmation email.
                   </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Powered by</span>
-                    <a
-                      href="https://razorpay.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block"
-                    >
-                      <img
-                        src="https://razorpay.com/assets/razorpay-logo.svg"
-                        alt="Razorpay"
-                        className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-                        onError={(e) => {
-                          // Fallback to text if image fails to load
-                          e.currentTarget.style.display = "none";
-                          const parent = e.currentTarget.parentElement;
-                          if (parent && !parent.querySelector(".razorpay-text-fallback")) {
-                            const text = document.createElement("span");
-                            text.className = "razorpay-text-fallback text-xs font-semibold text-muted-foreground";
-                            text.textContent = "Razorpay";
-                            parent.appendChild(text);
-                          }
-                        }}
-                      />
-                    </a>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>Secure & 100% Transparent</span>
                   </div>
                 </div>
               </form>
@@ -388,16 +373,23 @@ const Donate = () => {
             </Card>
 
             <Card className="p-6 gradient-trust text-primary-foreground">
-              <h3 className="text-xl font-bold mb-3">Other Ways to Give</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Bank Transfer</li>
-                <li>• Cryptocurrency</li>
-                <li>• Stock Donations</li>
-                <li>• Corporate Matching</li>
-                <li>• Legacy Giving</li>
-              </ul>
+              <h3 className="text-xl font-bold mb-3">How It Works</h3>
+              <ol className="space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <span className="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                  <span>Copy the bank details above and transfer the amount</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                  <span>Fill in your details and click "Confirm Donation"</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                  <span>Our team will verify the transfer and send your receipt via email</span>
+                </li>
+              </ol>
               <p className="text-sm mt-4 opacity-90">
-                Contact us at donate@vidhyaloktrust.org for more information.
+                Contact us at vidhyaloktrustofeducation@gmail.com for any queries.
               </p>
             </Card>
           </div>

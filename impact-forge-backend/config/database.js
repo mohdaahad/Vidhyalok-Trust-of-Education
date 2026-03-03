@@ -45,46 +45,6 @@ const getSequelize = () => {
 };
 
 /**
- * Create default admin
- */
-const createDefaultAdmin = async (db) => {
-  try {
-    const adminEmail = process.env.ADMIN_EMAIL || "admin@vidhyaloktrust.org";
-    const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-
-    // Import User model directly to ensure it's available
-    const { default: User } = await import("../models/User.model.js");
-
-    if (!User) {
-      console.log("⚠️ User model not found. Skipping default admin creation.");
-      return;
-    }
-
-    const existingAdmin = await User.findOne({ where: { email: adminEmail } });
-
-    if (!existingAdmin) {
-      const admin = await User.create({
-        email: adminEmail,
-        password_hash: adminPassword, // Will be hashed by beforeSave hook
-        role: "admin",
-      });
-
-      console.log(`👤 Default admin created`);
-      console.log(`   Email: ${adminEmail}`);
-      console.log(`   Password: ${adminPassword}`);
-      console.log(`   ID: ${admin.id}`);
-    } else {
-      console.log(
-        `✅ Admin already exists: ${adminEmail} (ID: ${existingAdmin.id})`
-      );
-    }
-  } catch (error) {
-    console.error("⚠️ Error creating default admin:", error.message);
-    console.error(error.stack);
-  }
-};
-
-/**
  * Connect to MySQL Database
  */
 const connectDB = async () => {
@@ -110,7 +70,7 @@ const connectDB = async () => {
 
       console.log(`📊 Models synced: ${Object.keys(db.models).join(", ")}`);
 
-      await createDefaultAdmin(db);
+
     }
   } catch (error) {
     console.error("❌ Database connection error:", error.message);

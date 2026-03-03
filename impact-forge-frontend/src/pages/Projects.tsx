@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Heart, Droplets, Home, ArrowRight } from "lucide-react";
+import { GraduationCap, Heart, Droplets, Home, ArrowRight, MapPin, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -105,7 +105,7 @@ const Projects = () => {
                     return (
                       <Card
                         key={project.id}
-                        className="overflow-hidden transition-smooth hover:shadow-lg hover:-translate-y-2 animate-fade-in-up"
+                        className="overflow-hidden flex flex-col transition-smooth hover:shadow-lg hover:-translate-y-2 animate-fade-in-up"
                         style={{ animationDelay: `${index * 0.1}s` }}
                       >
                         {/* Image */}
@@ -129,24 +129,34 @@ const Projects = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6">
+                        <div className="p-6 flex flex-col flex-grow">
                           <h3 className="text-xl font-bold text-foreground mb-2">{project.title}</h3>
                           <p className="text-muted-foreground mb-4 text-sm line-clamp-2">{project.description}</p>
 
                           {/* Meta Info */}
-                          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                            <span>📍 {project.location}</span>
-                            {project.beneficiaries && <span>👥 {project.beneficiaries}</span>}
+                          <div className="flex flex-col gap-2 text-sm text-muted-foreground mb-4">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-primary" />
+                              <span>{project.location}</span>
+                            </div>
+                            {project.beneficiaries && (
+                              <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-primary" />
+                                <span>{project.beneficiaries} Beneficiaries</span>
+                              </div>
+                            )}
                           </div>
 
 
                           {/* CTA */}
-                          <Button variant="default" className="w-full group" asChild>
-                            <Link to={`/projects/${project.id}`}>
-                              Learn More
-                              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                            </Link>
-                          </Button>
+                          <div className="mt-auto pt-4">
+                            <Button variant="default" className="w-full group" asChild>
+                              <Link to={`/projects/${project.id}`}>
+                                Learn More
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     );

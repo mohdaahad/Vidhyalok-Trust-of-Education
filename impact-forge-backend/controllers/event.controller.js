@@ -444,6 +444,37 @@ export const deleteEventAgenda = async (req, res, next) => {
   }
 };
 
+// @desc    Update event agenda item
+// @route   PUT /api/events/:id/agenda/:agendaId
+// @access  Private/Admin
+export const updateEventAgenda = async (req, res, next) => {
+  try {
+    const agendaItem = await EventAgenda.findByPk(req.params.agendaId);
+
+    if (!agendaItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Agenda item not found",
+      });
+    }
+
+    const { time, activity, display_order } = req.body;
+
+    await agendaItem.update({
+      time: time || agendaItem.time,
+      activity: activity || agendaItem.activity,
+      display_order: display_order !== undefined ? display_order : agendaItem.display_order,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: agendaItem,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Add event gallery image
 // @route   POST /api/events/:id/gallery
 // @access  Private/Admin
