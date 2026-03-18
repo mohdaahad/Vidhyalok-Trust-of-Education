@@ -3,14 +3,14 @@ import missionIcon from "@/assets/mission-icon.jpg";
 
 const stats = [
   { icon: Users, value: "1K+", label: "Lives Impacted" },
-  { icon: Heart, value: "50+", label: "Active Volunteers" },
-  { icon: Target, value: "10+", label: "Projects Completed" },
+  { icon: Heart, value: "10+", label: "Active Volunteers" },
+  { icon: Target, value: "1+", label: "Projects Completed" },
   { icon: TrendingUp, value: "95%", label: "Success Rate" },
 ];
 
 const MissionSection = () => {
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-12 md:py-20 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left - Image */}
@@ -22,9 +22,9 @@ const MissionSection = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -right-6 bg-secondary text-secondary-foreground p-8 rounded-2xl shadow-lg">
-              <p className="text-4xl font-bold">1+</p>
-              <p className="text-sm">Years of Impact</p>
+            <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-secondary text-secondary-foreground p-4 sm:p-8 rounded-2xl shadow-lg">
+              <p className="text-2xl sm:text-4xl font-bold">1+</p>
+              <p className="text-xs sm:text-sm text-secondary-foreground/90">Years of Impact</p>
             </div>
           </div>
 
@@ -42,17 +42,17 @@ const MissionSection = () => {
             </p>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
                   <div
                     key={index}
-                    className="bg-card p-6 rounded-xl shadow-md border border-border transition-smooth hover:shadow-lg hover:-translate-y-1"
+                    className="bg-card p-4 sm:p-6 rounded-xl shadow-md border border-border transition-smooth hover:shadow-lg hover:-translate-y-1"
                   >
-                    <Icon className="w-8 h-8 text-primary mb-3" />
-                    <p className="text-3xl font-bold text-foreground mb-1">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-2 sm:mb-3" />
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
                   </div>
                 );
               })}
